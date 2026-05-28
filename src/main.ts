@@ -82,7 +82,7 @@ canvas.addEventListener("wheel", (e) => {
   camY = my - (e.clientY - height / 2) / zoom;
 }, { passive: false });
 
-function frame(_t: number) {
+function frame() {
   const invZoom = 1 / zoom;
 
   for (let y = 0; y < height; ++y) {
@@ -104,8 +104,8 @@ function getNearestElementCoords(cameraCoords: [number,number]): [number,number]
   const fullPart: [number,number] = [Math.floor(mapCoords[0]), Math.floor(mapCoords[1])];
   const fracPart: [number, number] = [mapCoords[0]-fullPart[0], mapCoords[1]-fullPart[1]]
 
-  let [x, y] = fracPart;
-  // vorenoi cells are like
+  const [x, y] = fracPart;
+  // Voronoi cells are like
   // AAA*****
   // AA *****
   // ----- BB
@@ -172,12 +172,12 @@ function processUpdates(updateQueue: Denque<[number, number]>) {
 }
 
 function processUpdate(coordinate: [number, number]): [number, number][] {
-  let count = getElement(coordinate);
+  const count = getElement(coordinate);
   if (count == null) return [];
   if (ruleset(count)) return [];
 
-  let toAdd = Math.floor(count/6);
-  let remainder = count % 6
+  const toAdd = Math.floor(count/6);
+  const remainder = count % 6
   setElement(coordinate, ()=>remainder);
 
   const neighbours = getNeighbours(coordinate)
@@ -239,10 +239,6 @@ panel.append(
   makeSlider("Grains/step", 1, 10000, params.grainsPerFrame, true, (v) => { params.grainsPerFrame = v; }),
 );
 document.body.append(panel);
-
-(window as any).animate = animate;
-(window as any).setElement = setElement;
-(window as any).frame = frame;
 
 requestAnimationFrame(frame);
 setInterval(animate, 10);
