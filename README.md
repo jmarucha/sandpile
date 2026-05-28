@@ -1,8 +1,8 @@
 # sandpile
 
-This is a simulation of abelian sandpiles on hexagonal grid.
+This is a simulation of abelian sandpiles on hexagonal grid. If you want to read some cool stuff about it, start [on wiki](https://en.wikipedia.org/wiki/Abelian_sandpile_model).
 
-It's nothing exceptional but it looks fun in motion.
+The simulation is nothing exceptional but it looks fun in motion.
 
 ![Cool hexagonal symmetric pattern](assets/screenshot.png)
 
