@@ -40,7 +40,7 @@ const COLORS = [
 
 function colorFor(value: number | null): number {
   if (value != null)
-    return COLORS[value];
+    return COLORS[value]; // no OOB checks as it made a difference in performance (???)
   else
     return 0xff050505;
 }
@@ -131,7 +131,7 @@ function getElement(c:[number,number]): number | null {
   return data[PLAYGROUND_SIZE*y+x]
 }
 
-function setElement(c:[number,number], setter: Function) {
+function setElement(c:[number,number], setter: (n: number) => number) {
   const x = c[0] + PLAYGROUND_SIZE/2;
   const y = c[1] + PLAYGROUND_SIZE/2;
   if (x < 0 || y < 0 || x >= PLAYGROUND_SIZE || y >= PLAYGROUND_SIZE) {
