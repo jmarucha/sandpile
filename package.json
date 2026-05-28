@@ -13,7 +13,6 @@
     "vite": "^8.0.12"
   },
   "dependencies": {
-    "denque": "^2.1.0",
-    "lil-gui": "^0.21.0"
+    "denque": "^2.1.0"
   }
 }

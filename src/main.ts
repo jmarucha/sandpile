@@ -1,5 +1,4 @@
 import Denque from "denque";
-import GUI from "lil-gui";
 
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -29,19 +28,27 @@ const COLORS = [
   0xffffffff, // 6: white
   0xffff88ff, // 7: pink
   0xffff44ff, // 8+: magenta
+  0xffff33ff,
+  0xffff22ff,
+  0xffff11ff,
+  0xffff00ff,
+  0xffdd00dd,
+  0xffaa00aa,
+  0xff990099,
+  0xff550055,
 ];
 
 function colorFor(value: number | null): number {
   if (value != null)
-    return COLORS[Math.min(value, COLORS.length - 1)];
+    return COLORS[value];
   else
-    return 0xffffffff
+    return 0xff050505;
 }
 
 // Camera state
 let camX = 0;
 let camY = 0;
-let zoom = 4;
+let zoom = 8;
 
 // Mouse drag
 let dragging = false;
@@ -112,8 +119,8 @@ function getNearestElementCoords(cameraCoords: [number,number]): [number,number]
   return fullPart; // -
 }
 
-const PLAYGROUND_SIZE: number = 512 // must be even. fuck.
-const data = new Float32Array(PLAYGROUND_SIZE * PLAYGROUND_SIZE);
+const PLAYGROUND_SIZE: number = 1024 // must be even. fuck.
+const data = new Uint32Array(PLAYGROUND_SIZE * PLAYGROUND_SIZE);
 
 function getElement(c:[number,number]): number | null {
   const x = c[0] + PLAYGROUND_SIZE/2;
@@ -133,6 +140,7 @@ function setElement(c:[number,number], setter: Function) {
   data[PLAYGROUND_SIZE*y+x] = setter(data[PLAYGROUND_SIZE*y+x])
 }
 
+// Hex neighbours
 function getNeighbours(c:[number,number]): [number,number][] {
   const x = c[0];
   const y = c[1];
@@ -146,11 +154,9 @@ function getNeighbours(c:[number,number]): [number,number][] {
   ]
 }
 
-// should the sand stay
 const params = {
   stableGrains: 6,
-  grainsPerStep: 1,
-  stepsPerFrame: 10
+  grainsPerFrame: 1,
 };
 const ruleset = (n: number) => n <= params.stableGrains;
 
@@ -182,17 +188,57 @@ function processUpdate(coordinate: [number, number]): [number, number][] {
 }
 
 function animate() {
-  if (params.stableGrains < 6) return; // code hangs
-  for (let i = 0; i < params.stepsPerFrame; ++i) {
-  setElement([0,0], (n:number)=>n+params.grainsPerStep)
+  const start = Date.now();
+  if (params.stableGrains < 6) return;
+  setElement([0,0], (n:number)=>n+params.grainsPerFrame)
   processUpdates(new Denque([[0,0]] as [number,number][]));
-  }
+  const end = Date.now();
+  console.log(`${end-start} ms`)
 }
 
-const gui = new GUI();
-gui.add(params, 'stableGrains', 1, 24, 1).name('Stable grains');
-gui.add(params, 'grainsPerStep', 1, 100, 1).name('Grains/step');
-gui.add(params, 'stepsPerFrame', 0, 10000, 1).name('Steps/frame');
+// GUI
+function makeSlider(label: string, min: number, max: number, initial: number, log: boolean, onChange: (v: number) => void) {
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;align-items:center;gap:8px;margin:4px 0;color:#ccc;font:12px monospace;";
+  const lbl = document.createElement("span");
+  lbl.style.width = "100px";
+  lbl.textContent = label;
+  const val = document.createElement("span");
+  val.style.width = "50px";
+  val.style.textAlign = "right";
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = "0";
+  input.max = "1000";
+  input.style.flex = "1";
+
+  const toSlider = log
+    ? (v: number) => Math.round(1000 * Math.log(v / min) / Math.log(max / min))
+    : (v: number) => Math.round(1000 * (v - min) / (max - min));
+  const fromSlider = log
+    ? (s: number) => Math.round(min * Math.pow(max / min, s / 1000))
+    : (s: number) => Math.round(min + (max - min) * s / 1000);
+
+  input.value = String(toSlider(initial));
+  val.textContent = String(initial);
+
+  input.addEventListener("input", () => {
+    const v = fromSlider(Number(input.value));
+    val.textContent = String(v);
+    onChange(v);
+  });
+
+  row.append(lbl, input, val);
+  return row;
+}
+
+const panel = document.createElement("div");
+panel.style.cssText = "position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:8px 12px;border-radius:6px;z-index:10;";
+panel.append(
+  makeSlider("Stable", 6, 24, params.stableGrains, false, (v) => { params.stableGrains = v; }),
+  makeSlider("Grains/step", 1, 10000, params.grainsPerFrame, true, (v) => { params.grainsPerFrame = v; }),
+);
+document.body.append(panel);
 
 (window as any).animate = animate;
 (window as any).setElement = setElement;
