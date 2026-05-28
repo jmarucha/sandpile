@@ -17,13 +17,13 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
+    "jiti": "^2.7.0",
     "prettier": "^3.8.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.60.0",
     "vite": "^8.0.12"
   },
   "dependencies": {
-    "denque": "^2.1.0",
-    "jiti": "^2.7.0"
+    "denque": "^2.1.0"
   }
 }
