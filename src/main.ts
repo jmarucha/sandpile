@@ -1,4 +1,5 @@
 import { CPUCore } from "./cpu_core";
+import { CPURenderer } from "./cpu_renderer";
 import { initializeGUI } from "./gui";
 
 export type SimulationParams = {
@@ -6,24 +7,7 @@ export type SimulationParams = {
   grainsPerFrame: number;
 };
 
-const canvas = document.getElementById("c") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d")!;
-
-let width: number;
-let height: number;
-let imageData: ImageData;
-let buf: Uint32Array;
-
-function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
-  imageData = ctx.createImageData(width, height);
-  buf = new Uint32Array(imageData.data.buffer);
-}
-
-resize();
-window.addEventListener("resize", resize);
-
+window.addEventListener("resize", () => cpuRenderer.resize());
 
 const params: SimulationParams = {
   stableGrains: 6,
@@ -32,49 +16,15 @@ const params: SimulationParams = {
 
 const cpuCore = new CPUCore();
 
-function getElement(c: [number, number]): number | null {
-  const x = c[0] + cpuCore.playgroundSize / 2;
-  const y = c[1] + cpuCore.playgroundSize / 2;
-  if (x < 0 || y < 0 || x >= cpuCore.playgroundSize || y >= cpuCore.playgroundSize) {
-    return null;
-  }
-  return cpuCore.getRawData()[cpuCore.playgroundSize * y + x];
-}
-
-
-const COLORS = [
-  0xff000000, // 0: black
-  0xff552200, // 1: dark brown
-  0xff0055aa, // 2: teal
-  0xff00aaff, // 3: orange
-  0xff00ddff, // 4: yellow
-  0xff44ffff, // 5: bright yellow
-  0xffffffff, // 6: white
-  0xffff88ff, // 7: pink
-  0xffff44ff, // 8+: magenta
-  0xffff33ff,
-  0xffff22ff,
-  0xffff11ff,
-  0xffff00ff,
-  0xffdd00dd,
-  0xffaa00aa,
-  0xff990099,
-  0xff550055,
-];
-
-function colorFor(value: number | null): number {
-  if (value != null)
-    return COLORS[value]; // no OOB checks as it made a difference in performance (???)
-  else return 0xff050505;
-}
-
-type Camera2D = {
+export type Camera2D = {
   x: number;
   y: number;
   zoom: number;
-}
+};
 // Camera state
 let cam: Camera2D = { x: 0, y: 0, zoom: 8 };
+const canvas = document.getElementById("c") as HTMLCanvasElement;
+const cpuRenderer = new CPURenderer(canvas, cam);
 
 // Mouse drag
 let dragging = false;
@@ -105,59 +55,20 @@ canvas.addEventListener(
     e.preventDefault();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
     // zoom toward mouse pointer
-    const mx = (e.clientX - width / 2) / cam.zoom + cam.x;
-    const my = (e.clientY - height / 2) / cam.zoom + cam.y;
+    const mx = (e.clientX - canvas.width / 2) / cam.zoom + cam.x;
+    const my = (e.clientY - canvas.height / 2) / cam.zoom + cam.y;
     cam.zoom *= factor;
-    cam.x = mx - (e.clientX - width / 2) / cam.zoom;
-    cam.y = my - (e.clientY - height / 2) / cam.zoom;
+    cam.x = mx - (e.clientX - canvas.width / 2) / cam.zoom;
+    cam.y = my - (e.clientY - canvas.height / 2) / cam.zoom;
   },
   { passive: false },
 );
 
 function frame() {
-  const invZoom = 1 / cam.zoom;
-
-  for (let y = 0; y < height; ++y) {
-    const cy = (y - height / 2) * invZoom + cam.y;
-    for (let x = 0; x < width; ++x) {
-      const cx = (x - width / 2) * invZoom + cam.x;
-      const nearestElement = getNearestElementCoords([cx, cy]);
-      const val = getElement(nearestElement);
-      buf[y * width + x] = colorFor(val);
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
+  cpuRenderer.render(cpuCore.getRawData(), cpuCore.playgroundSize);
   requestAnimationFrame(frame);
 }
 
-function getNearestElementCoords(
-  cameraCoords: [number, number],
-): [number, number] {
-  const mapCoords: [number, number] = [
-    cameraCoords[0] + (1 / Math.sqrt(3)) * cameraCoords[1],
-    (2 * cameraCoords[1]) / Math.sqrt(3),
-  ];
-  const fullPart: [number, number] = [
-    Math.floor(mapCoords[0]),
-    Math.floor(mapCoords[1]),
-  ];
-  const fracPart: [number, number] = [
-    mapCoords[0] - fullPart[0],
-    mapCoords[1] - fullPart[1],
-  ];
-
-  const [x, y] = fracPart;
-  // Voronoi cells are like
-  // AAA*****
-  // AA *****
-  // ----- BB
-  // -----BBB
-  if (y > 0.5 * (x + 1) && y > 2 * x) return [fullPart[0], fullPart[1] + 1]; // A
-  if (y < 0.5 * x && y < 2 * x - 1) return [fullPart[0] + 1, fullPart[1]]; // B
-  if (y > 1 - x) return [fullPart[0] + 1, fullPart[1] + 1]; // *
-  return fullPart; // -
-}
 initializeGUI(params);
 
 requestAnimationFrame(frame);

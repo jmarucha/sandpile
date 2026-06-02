@@ -35,7 +35,12 @@ export class CPUCore {
   private coordinateToIndex(c: [number, number]): number | null {
     const x = c[0] + this.playgroundSize / 2;
     const y = c[1] + this.playgroundSize / 2;
-    if (x < 0 || y < 0 || x >= this.playgroundSize || y >= this.playgroundSize) {
+    if (
+      x < 0 ||
+      y < 0 ||
+      x >= this.playgroundSize ||
+      y >= this.playgroundSize
+    ) {
       return null;
     }
     return this.playgroundSize * y + x;
