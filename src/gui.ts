@@ -1,3 +1,5 @@
+import type { SimulationParams } from "./main";
+
 // GUI
 function makeSlider(
   label: string,
@@ -24,7 +26,7 @@ function makeSlider(
 
   const toSlider = log
     ? (v: number) =>
-        Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
+      Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
     : (v: number) => Math.round((1000 * (v - min)) / (max - min));
   const fromSlider = log
     ? (s: number) => Math.round(min * Math.pow(max / min, s / 1000))
@@ -43,7 +45,7 @@ function makeSlider(
   return row;
 }
 
-export function initializeGUI(params: any) {
+export function initializeGUI(params: SimulationParams) {
   const panel = document.createElement("div");
   panel.style.cssText =
     "position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:8px 12px;border-radius:6px;z-index:10;";
