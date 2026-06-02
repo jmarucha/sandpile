@@ -73,22 +73,3 @@ initializeGUI(params);
 
 requestAnimationFrame(frame);
 setInterval(() => cpuCore.animate(params), 10);
-
-function debugCenter() {
-  const R = 3; // radius — covers 37 hexes (close to 35)
-  const lines: string[] = [];
-  for (let y = -R; y <= R; y++) {
-    const indent = " ".repeat(Math.max(0, -y) * 2);
-    const row: string[] = [];
-    for (let x = -R; x <= R; x++) {
-      // hex constraint: skip corners outside the hex radius
-      if (x + y < -R || x + y > R) continue;
-      const v = getElement([x, y]);
-      row.push(v === null ? " ." : String(v).padStart(3));
-    }
-    lines.push(indent + row.join(" "));
-  }
-  console.log(lines.join("\n"));
-}
-
-(window as any).debugCenter = debugCenter;
