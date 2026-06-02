@@ -1,13 +1,14 @@
 import { CPUCore } from "./cpu_core";
 import { CPURenderer } from "./cpu_renderer";
 import { initializeGUI } from "./gui";
+import { WebGLRenderer } from "./webgl_renderer";
 
 export type SimulationParams = {
   stableGrains: number;
   grainsPerFrame: number;
 };
 
-window.addEventListener("resize", () => cpuRenderer.resize());
+window.addEventListener("resize", () => webGLRenderer.resize());
 
 const params: SimulationParams = {
   stableGrains: 6,
@@ -24,7 +25,8 @@ export type Camera2D = {
 // Camera state
 let cam: Camera2D = { x: 0, y: 0, zoom: 8 };
 const canvas = document.getElementById("c") as HTMLCanvasElement;
-const cpuRenderer = new CPURenderer(canvas, cam);
+// const cpuRenderer = new CPURenderer(canvas, cam);
+const webGLRenderer = new WebGLRenderer(canvas, cam);
 
 // Mouse drag
 let dragging = false;
@@ -65,7 +67,7 @@ canvas.addEventListener(
 );
 
 function frame() {
-  cpuRenderer.render(cpuCore.getRawData(), cpuCore.playgroundSize);
+  webGLRenderer.render(cpuCore.getRawData(), cpuCore.playgroundSize);
   requestAnimationFrame(frame);
 }
 

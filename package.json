@@ -24,6 +24,7 @@
     "vite": "^8.0.12"
   },
   "dependencies": {
-    "denque": "^2.1.0"
+    "denque": "^2.1.0",
+    "twgl.js": "^7.0.0"
   }
 }
