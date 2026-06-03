@@ -25,6 +25,11 @@ export class WebGLRenderer {
         }
         this.gl = gl;
         this.dataTexture = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, this.dataTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         this.programInfo = twgl.createProgramInfo(gl, [vs, fs]);
 
         // fullscreen quad: two triangles covering clip space
@@ -46,24 +51,28 @@ export class WebGLRenderer {
         gl.texImage2D(
             gl.TEXTURE_2D,
             0,
-            gl.RGBA,
+            gl.R32UI,
             playgroundSize,
             playgroundSize,
             0,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            new Uint8Array(imageData.buffer),
+            gl.RED_INTEGER,
+            gl.UNSIGNED_INT,
+            imageData,
         );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
         gl.useProgram(this.programInfo.program);
         twgl.setBuffersAndAttributes(gl, this.programInfo, this.bufferInfo);
+
+        // Bind data texture manually (usampler2D not auto-handled by twgl)
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.dataTexture);
+        gl.uniform1i(gl.getUniformLocation(this.programInfo.program, "u_data"), 0);
+
         twgl.setUniforms(this.programInfo, {
-            u_data: this.dataTexture,
             u_resolution: [this.width, this.height],
-            u_camPos: [this.camera.x, this.camera.y],
+            u_camPos: [this.camera.x, -this.camera.y],
             u_zoom: this.camera.zoom,
+            u_dataSize: playgroundSize,
         });
         twgl.drawBufferInfo(gl, this.bufferInfo);
     }
