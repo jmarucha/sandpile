@@ -33,35 +33,48 @@ vec3(0.33, 0.00, 0.33)
 
 const float sqrt3 = 1.7320508075688772;
 
+#define N 4
+
 void main() {
-    // Pixel coords centered at screen middle
-    vec2 px = (v_uv - 0.5) * u_resolution;
+    vec3 output_color = vec3(0.);
+    for (int i = 0; i < 5; i++) {
+        // Pixel coords centered at screen middle
+        vec2 px = (v_uv - 0.5) * u_resolution;
+        vec2 px_with_offset = px + vec2[5](
+            vec2(0., 0.),
+            vec2(0., 0.5),
+            vec2(0., -0.5),
+            vec2(0.5, 0.),
+            vec2(-0.5, 0.)
+        )[i];
 
-    // World coords with camera
-    vec2 world = px / u_zoom + u_camPos;
+        // World coords with camera
+        vec2 world = px_with_offset / u_zoom + u_camPos;
 
-    vec2 map = vec2(world.x + world.y / sqrt3, 2.0*world.y/sqrt3);
 
-    vec2 full_part = floor(map);
-    vec2 frac_part = map - full_part;
+        vec2 map = vec2(world.x + world.y / sqrt3, 2.0*world.y/sqrt3);
 
-    if (frac_part.y > 0.5 * (frac_part.x + 1.)
-        && frac_part.y > 2. * frac_part.x) map = full_part + vec2(0.,1.); // A
-    else if (frac_part.y < 0.5 * frac_part.x
-        && frac_part.y < 2. * frac_part.x - 1.) map = full_part + vec2(1.,0.); // B
-    else if (frac_part.y > 1. - frac_part.x) map = full_part + vec2(1.,1.); // *
-    else map = full_part;
+        vec2 full_part = floor(map);
+        vec2 frac_part = map - full_part;
 
-    // Map to data texture UV (origin = center of data)
-    vec2 dataUV = map / u_dataSize + 0.5;
+        if (frac_part.y > 0.5 * (frac_part.x + 1.)
+            && frac_part.y > 2. * frac_part.x) map = full_part + vec2(0.,1.); // A
+        else if (frac_part.y < 0.5 * frac_part.x
+            && frac_part.y < 2. * frac_part.x - 1.) map = full_part + vec2(1.,0.); // B
+        else if (frac_part.y > 1. - frac_part.x) map = full_part + vec2(1.,1.); // *
+        else map = full_part;
 
-    // Out-of-bounds → black
-    if (dataUV.x < 0.0 || dataUV.x > 1.0 || dataUV.y < 0.0 || dataUV.y > 1.0) {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        return;
+        // Map to data texture UV (origin = center of data)
+        vec2 dataUV = map / u_dataSize + 0.5;
+
+        // Out-of-bounds → black
+        if (dataUV.x < 0.0 || dataUV.x > 1.0 || dataUV.y < 0.0 || dataUV.y > 1.0) {
+            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+        }
+        uint value = texture(u_data, dataUV).r;
+        uint idx = min(value, 16u);
+        output_color += COLORS[idx]/5.0;
     }
-
-    uint value = texture(u_data, dataUV).r;
-    uint idx = min(value, 16u);
-    fragColor = vec4(COLORS[idx], 1.0);
+    fragColor = vec4(output_color, 1.);
 }
