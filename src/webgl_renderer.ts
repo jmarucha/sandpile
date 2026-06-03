@@ -44,7 +44,7 @@ export class WebGLRenderer {
         this.resize();
     }
 
-    public render(imageData: Uint32Array, playgroundSize: number) {
+    public render(imageData: Uint32Array, playgroundSize: number, antialiasing: boolean) {
         const gl = this.gl;
 
         gl.bindTexture(gl.TEXTURE_2D, this.dataTexture);
@@ -73,6 +73,7 @@ export class WebGLRenderer {
             u_camPos: [this.camera.x, -this.camera.y],
             u_zoom: this.camera.zoom,
             u_dataSize: playgroundSize,
+            u_antialiasing: antialiasing ? 1 : 0,
         });
         twgl.drawBufferInfo(gl, this.bufferInfo);
     }

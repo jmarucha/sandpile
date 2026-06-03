@@ -9,6 +9,7 @@ uniform vec2 u_resolution;
 uniform vec2 u_camPos;
 uniform float u_zoom;
 uniform float u_dataSize;
+uniform int u_antialiasing;
 
 // Color palette matching the original CPU renderer (RGB, 0-1)
 const vec3 COLORS[17] = vec3[17](
@@ -40,14 +41,18 @@ void main() {
     for (int i = 0; i < 5; i++) {
         // Pixel coords centered at screen middle
         vec2 px = (v_uv - 0.5) * u_resolution;
-        vec2 px_with_offset = px + vec2[5](
-            vec2(0., 0.),
-            vec2(0., 0.5),
-            vec2(0., -0.5),
-            vec2(0.5, 0.),
-            vec2(-0.5, 0.)
-        )[i];
-
+        vec2 px_with_offset;
+        if (u_antialiasing == 1) {
+            px_with_offset = px + vec2[5](
+                vec2(0., 0.),
+                vec2(0., 0.25),
+                vec2(0., -0.25),
+                vec2(0.25, 0.),
+                vec2(-0.25, 0.)
+            )[i];
+        } else {
+            px_with_offset = px;
+        }
         // World coords with camera
         vec2 world = px_with_offset / u_zoom + u_camPos;
 
@@ -65,7 +70,7 @@ void main() {
         else map = full_part;
 
         // Map to data texture UV (origin = center of data)
-        vec2 dataUV = map / u_dataSize + 0.5;
+        vec2 dataUV = (map + 0.5) / u_dataSize + 0.5;
 
         // Out-of-bounds → black
         if (dataUV.x < 0.0 || dataUV.x > 1.0 || dataUV.y < 0.0 || dataUV.y > 1.0) {
@@ -74,7 +79,13 @@ void main() {
         }
         uint value = texture(u_data, dataUV).r;
         uint idx = min(value, 16u);
-        output_color += COLORS[idx]/5.0;
+
+        if (u_antialiasing == 1) {
+            output_color += COLORS[idx]/5.0;
+        } else {
+            output_color += COLORS[idx];
+            break;
+        }
     }
     fragColor = vec4(output_color, 1.);
 }

@@ -1,6 +1,6 @@
 import { CPUCore } from "./cpu_core";
 import { CPURenderer } from "./cpu_renderer";
-import { initializeGUI } from "./gui";
+import { initializeGUI, type RenderParams } from "./gui";
 import { WebGLRenderer } from "./webgl_renderer";
 
 export type SimulationParams = {
@@ -24,6 +24,7 @@ export type Camera2D = {
 };
 // Camera state
 let cam: Camera2D = { x: 0, y: 0, zoom: 8 };
+const renderParams: RenderParams = { antialiasing: false };
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 // const cpuRenderer = new CPURenderer(canvas, cam);
 const webGLRenderer = new WebGLRenderer(canvas, cam);
@@ -66,12 +67,21 @@ canvas.addEventListener(
   { passive: false },
 );
 
+window.addEventListener("keydown", (e) => {
+  if (e.key === "a" || e.key === "A")
+    renderParams.antialiasing = !renderParams.antialiasing;
+});
+
 function frame() {
-  webGLRenderer.render(cpuCore.getRawData(), cpuCore.playgroundSize);
+  webGLRenderer.render(
+    cpuCore.getRawData(),
+    cpuCore.playgroundSize,
+    renderParams.antialiasing,
+  );
   requestAnimationFrame(frame);
 }
 
-initializeGUI(params);
+initializeGUI(params, renderParams);
 
 requestAnimationFrame(frame);
 setInterval(() => cpuCore.animate(params), 10);

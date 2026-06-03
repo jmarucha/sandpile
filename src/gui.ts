@@ -26,7 +26,7 @@ function makeSlider(
 
   const toSlider = log
     ? (v: number) =>
-        Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
+      Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
     : (v: number) => Math.round((1000 * (v - min)) / (max - min));
   const fromSlider = log
     ? (s: number) => Math.round(min * Math.pow(max / min, s / 1000))
@@ -45,10 +45,41 @@ function makeSlider(
   return row;
 }
 
-export function initializeGUI(params: SimulationParams) {
+export type RenderParams = {
+  antialiasing: boolean;
+};
+
+export function initializeGUI(
+  params: SimulationParams,
+  renderParams: RenderParams,
+) {
   const panel = document.createElement("div");
   panel.style.cssText =
     "position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:8px 12px;border-radius:6px;z-index:10;";
+
+  const sep = document.createElement("hr");
+  sep.style.cssText = "border:none;border-top:1px solid #555;margin:8px 0;";
+
+  const aaRow = document.createElement("div");
+  aaRow.style.cssText =
+    "display:flex;align-items:center;gap:8px;margin:4px 0;color:#ccc;font:12px monospace;";
+  const aaLabel = document.createElement("span");
+  aaLabel.textContent = "Antialiasing (A)";
+  const aaCheck = document.createElement("input");
+  aaCheck.type = "checkbox";
+  aaCheck.checked = renderParams.antialiasing;
+  aaCheck.addEventListener("change", () => {
+    renderParams.antialiasing = aaCheck.checked;
+  });
+  aaRow.append(aaLabel, aaCheck);
+
+  // Sync checkbox when toggled via keyboard
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "a" || e.key === "A") {
+      aaCheck.checked = renderParams.antialiasing;
+    }
+  });
+
   panel.append(
     makeSlider("Stable", 6, 24, params.stableGrains, false, (v) => {
       params.stableGrains = v;
@@ -56,6 +87,8 @@ export function initializeGUI(params: SimulationParams) {
     makeSlider("Grains/step", 1, 10000, params.grainsPerFrame, true, (v) => {
       params.grainsPerFrame = v;
     }),
+    sep,
+    aaRow,
   );
   document.body.append(panel);
 }
