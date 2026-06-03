@@ -25,7 +25,11 @@ export class CPURenderer implements Renderer {
     this.resize();
   }
 
-  public render(imageData: Uint32Array, playgroundSize: number, _antialiasing: boolean) {
+  public render(
+    imageData: Uint32Array,
+    playgroundSize: number,
+    _antialiasing: boolean,
+  ) {
     const invZoom = 1 / this.camera.zoom;
 
     for (let y = 0; y < this.height; ++y) {

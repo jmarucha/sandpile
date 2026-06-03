@@ -26,7 +26,7 @@ function makeSlider(
 
   const toSlider = log
     ? (v: number) =>
-      Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
+        Math.round((1000 * Math.log(v / min)) / Math.log(max / min))
     : (v: number) => Math.round((1000 * (v - min)) / (max - min));
   const fromSlider = log
     ? (s: number) => Math.round(min * Math.pow(max / min, s / 1000))
