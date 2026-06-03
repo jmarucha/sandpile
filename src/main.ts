@@ -1,14 +1,13 @@
 import { CPUCore } from "./cpu_core";
 import { CPURenderer } from "./cpu_renderer";
 import { initializeGUI, type RenderParams } from "./gui";
+import type { Camera2D, Renderer } from "./renderer";
 import { WebGLRenderer } from "./webgl_renderer";
 
 export type SimulationParams = {
   stableGrains: number;
   grainsPerFrame: number;
 };
-
-window.addEventListener("resize", () => webGLRenderer.resize());
 
 const params: SimulationParams = {
   stableGrains: 6,
@@ -17,17 +16,20 @@ const params: SimulationParams = {
 
 const cpuCore = new CPUCore();
 
-export type Camera2D = {
-  x: number;
-  y: number;
-  zoom: number;
-};
-// Camera state
-let cam: Camera2D = { x: 0, y: 0, zoom: 8 };
+const cam: Camera2D = { x: 0, y: 0, zoom: 8 };
 const renderParams: RenderParams = { antialiasing: false };
+
 const canvas = document.getElementById("c") as HTMLCanvasElement;
-// const cpuRenderer = new CPURenderer(canvas, cam);
-const webGLRenderer = new WebGLRenderer(canvas, cam);
+
+let renderer: Renderer;
+try {
+  renderer = new WebGLRenderer(canvas, cam);
+} catch {
+  console.warn("WebGL2 not available, falling back to CPU renderer");
+  renderer = new CPURenderer(canvas, cam);
+}
+
+window.addEventListener("resize", () => renderer.resize());
 
 // Mouse drag
 let dragging = false;
@@ -57,7 +59,6 @@ canvas.addEventListener(
   (e) => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
-    // zoom toward mouse pointer
     const mx = (e.clientX - canvas.width / 2) / cam.zoom + cam.x;
     const my = (e.clientY - canvas.height / 2) / cam.zoom + cam.y;
     cam.zoom *= factor;
@@ -73,7 +74,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 function frame() {
-  webGLRenderer.render(
+  renderer.render(
     cpuCore.getRawData(),
     cpuCore.playgroundSize,
     renderParams.antialiasing,

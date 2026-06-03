@@ -1,6 +1,6 @@
-import type { Camera2D } from "./main";
+import type { Camera2D, Renderer } from "./renderer";
 
-export class CPURenderer {
+export class CPURenderer implements Renderer {
   camera: Camera2D;
 
   private readonly canvas: HTMLCanvasElement;
@@ -25,7 +25,7 @@ export class CPURenderer {
     this.resize();
   }
 
-  public render(imageData: Uint32Array, playgroundSize: number) {
+  public render(imageData: Uint32Array, playgroundSize: number, _antialiasing: boolean) {
     const invZoom = 1 / this.camera.zoom;
 
     for (let y = 0; y < this.height; ++y) {
