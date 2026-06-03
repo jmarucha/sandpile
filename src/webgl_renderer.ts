@@ -1,7 +1,7 @@
 import type { Camera2D, Renderer } from "./renderer";
 import * as twgl from "twgl.js";
-import vs from "./shaders/quad.vert.glsl?raw";
-import fs from "./shaders/sandpile.frag.glsl?raw";
+import vs from "./shaders/quad.vert.glsl";
+import fs from "./shaders/sandpile.frag.glsl";
 export class WebGLRenderer implements Renderer {
   camera: Camera2D;
 
